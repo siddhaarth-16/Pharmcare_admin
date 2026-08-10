@@ -1,0 +1,563 @@
+/* ==================================================
+   PHARMACARE ADMIN — DESIGN SYSTEM
+   (shares brand tokens with the customer site)
+   ================================================== */
+
+:root {
+
+    --green-50:  #eefaf5;
+    --green-100: #d3f2e3;
+    --green-500: #0e9e6b;
+    --green-600: #087f5b;
+    --green-700: #066848;
+    --green-glow: rgba(8, 127, 91, .18);
+
+    --blue-bg:  #dbe9ff; --blue-fg:  #0b5fa5;
+    --orange-bg:#ffe8d1; --orange-fg:#b06a00;
+    --violet-bg:#eadcff; --violet-fg:#5b2ba5;
+    --amber-bg: #fff3cd; --amber-fg: #8a6300;
+    --green-bg: #d3f7df; --green-fg: #087f5b;
+    --red-bg:   #fde0e0; --red-fg:   #c62828;
+
+    --bg: #f6faf8;
+    --surface: #ffffff;
+    --surface-2: #f0f6f3;
+    --border: #e5ebe7;
+    --text: #172420;
+    --text-muted: #647169;
+    --text-faint: #97a49c;
+    --shadow-sm: 0 2px 10px rgba(15, 40, 30, .05);
+    --shadow-md: 0 10px 30px rgba(15, 40, 30, .08);
+    --shadow-lg: 0 24px 60px rgba(15, 40, 30, .16);
+
+    --sidebar-bg: #10151a;
+    --sidebar-bg-hover: #1b2229;
+    --sidebar-text: #aab4bd;
+    --sidebar-text-active: #ffffff;
+
+    --font-display: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+    --font-body: 'Inter', 'Segoe UI', sans-serif;
+
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 22px;
+    --radius-pill: 999px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+}
+
+h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
+
+button { font-family: inherit; cursor: pointer; }
+
+.hidden { display: none !important; }
+
+
+/* ==================================================
+   ADMIN LOGIN
+   ================================================== */
+
+.admin-login {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background:
+        radial-gradient(circle at 20% 20%, rgba(8,127,91,.12) 0%, transparent 45%),
+        #0d1410;
+}
+
+.login-box {
+    width: 100%;
+    max-width: 380px;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 40px 34px;
+    text-align: center;
+}
+
+.admin-logo {
+    width: 56px; height: 56px;
+    border-radius: 16px;
+    background: var(--green-600);
+    color: white;
+    font-size: 26px;
+    display: grid;
+    place-items: center;
+    margin: 0 auto 18px;
+}
+
+.login-box h1 { font-size: 22px; margin-bottom: 4px; }
+.login-box p { color: var(--text-muted); font-size: 13.5px; margin-bottom: 26px; }
+
+.login-box input {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    outline: none;
+    font-size: 14.5px;
+    margin-bottom: 14px;
+    font-family: inherit;
+}
+
+.login-box input:focus { border-color: var(--green-600); }
+
+.login-box button {
+    width: 100%;
+    border: none;
+    background: var(--green-600);
+    color: white;
+    padding: 14px;
+    border-radius: var(--radius-pill);
+    font-weight: 700;
+    font-size: 14.5px;
+    margin-top: 6px;
+}
+
+.login-box button:hover { background: var(--green-700); }
+
+#adminLoginMessage { margin-top: 14px; font-size: 13.5px; font-weight: 600; min-height: 18px; }
+
+
+/* ==================================================
+   DASHBOARD SHELL
+   ================================================== */
+
+.dashboard {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: 100vh;
+}
+
+.sidebar {
+    background: var(--sidebar-bg);
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+}
+
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: white;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 17px;
+    padding: 8px 10px 26px;
+}
+
+.sidebar-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    border: none;
+    background: none;
+    color: var(--sidebar-text);
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 14px;
+    text-align: left;
+    margin-bottom: 4px;
+    transition: background .15s ease, color .15s ease;
+}
+
+.sidebar-btn .badge {
+    margin-left: auto;
+    background: var(--green-600);
+    color: white;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+}
+
+.sidebar-btn:hover { background: var(--sidebar-bg-hover); color: var(--sidebar-text-active); }
+
+.sidebar-btn.active { background: var(--green-600); color: white; }
+
+.sidebar-btn.logout-btn { margin-top: auto; color: #f3a1a1; }
+.sidebar-btn.logout-btn:hover { background: rgba(198, 40, 40, .18); color: #ff8a8a; }
+
+
+/* ==================================================
+   MAIN CONTENT
+   ================================================== */
+
+.main-content { padding: 32px 36px 60px; min-width: 0; }
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.topbar span.eyebrow {
+    color: var(--green-600);
+    font-size: 11.5px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+}
+
+.topbar h1 { font-size: 26px; margin-top: 4px; }
+
+#adminUser {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 9px 16px;
+    border-radius: var(--radius-pill);
+    font-weight: 700;
+    font-size: 13.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.add-btn {
+    border: none;
+    background: var(--green-600);
+    color: white;
+    padding: 12px 20px;
+    border-radius: var(--radius-pill);
+    font-weight: 700;
+    font-size: 13.5px;
+}
+
+.add-btn:hover { background: var(--green-700); }
+
+.refresh-btn {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    padding: 9px 16px;
+    border-radius: var(--radius-pill);
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.refresh-btn:hover { border-color: var(--green-600); color: var(--green-600); }
+
+
+/* ==================================================
+   STAT CARDS
+   ================================================== */
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-bottom: 28px;
+}
+
+.stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.stat-card .stat-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-size: 19px;
+    flex-shrink: 0;
+}
+
+.stat-card .stat-body span.label { font-size: 12.5px; color: var(--text-muted); font-weight: 600; }
+.stat-card .stat-body strong { display: block; font-size: 24px; margin-top: 4px; }
+.stat-card .stat-body small { font-size: 11.5px; color: var(--text-faint); }
+
+.stat-orders .stat-icon { background: var(--blue-bg); color: var(--blue-fg); }
+.stat-pending .stat-icon { background: var(--orange-bg); color: var(--orange-fg); }
+.stat-sales .stat-icon { background: var(--green-bg); color: var(--green-fg); }
+.stat-today .stat-icon { background: var(--violet-bg); color: var(--violet-fg); }
+
+
+/* ==================================================
+   PANELS / TABLES
+   ================================================== */
+
+.panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 22px;
+    margin-bottom: 24px;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.panel-header h2 { font-size: 17px; }
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 20px;
+    align-items: start;
+}
+
+.table-wrapper { overflow-x: auto; }
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+}
+
+.admin-table th {
+    text-align: left;
+    padding: 10px 12px;
+    color: var(--text-muted);
+    font-weight: 700;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+
+.admin-table td {
+    padding: 13px 12px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+
+.admin-table tr:last-child td { border-bottom: none; }
+
+.admin-table tbody tr { cursor: pointer; transition: background .12s ease; }
+.admin-table tbody tr:hover { background: var(--surface-2); }
+.admin-table tbody tr.row-selected { background: var(--green-50); }
+
+.status-badge {
+    display: inline-block;
+    padding: 5px 11px;
+    border-radius: var(--radius-pill);
+    font-size: 11px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.status-pending { background: var(--amber-bg); color: var(--amber-fg); }
+.status-confirmed { background: var(--blue-bg); color: var(--blue-fg); }
+.status-packed { background: var(--violet-bg); color: var(--violet-fg); }
+.status-out-for-delivery { background: var(--orange-bg); color: var(--orange-fg); }
+.status-delivered { background: var(--green-bg); color: var(--green-fg); }
+.status-cancelled { background: var(--red-bg); color: var(--red-fg); }
+
+.icon-link-btn {
+    border: none;
+    background: var(--surface-2);
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    font-size: 13px;
+}
+
+.icon-link-btn:hover { background: var(--border); }
+
+.danger-btn {
+    border: none;
+    background: var(--red-bg);
+    color: var(--red-fg);
+    padding: 7px 13px;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: 12.5px;
+}
+
+.danger-btn:hover { background: #f9c9c9; }
+
+.loading-state { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 13.5px; }
+
+
+/* ==================================================
+   ORDER STATUS PANEL
+   ================================================== */
+
+.status-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 22px;
+    position: sticky;
+    top: 24px;
+}
+
+.status-panel h2 { font-size: 16px; margin-bottom: 4px; }
+
+.status-panel .order-ref { font-size: 12.5px; color: var(--text-muted); margin-bottom: 18px; }
+
+.status-panel .empty-state {
+    text-align: center;
+    color: var(--text-faint);
+    font-size: 13px;
+    padding: 30px 10px;
+}
+
+.status-action-btn {
+    display: block;
+    width: 100%;
+    border: none;
+    padding: 13px;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: 13.5px;
+    color: white;
+    margin-bottom: 10px;
+    text-align: center;
+    transition: filter .15s ease, opacity .15s ease;
+}
+
+.status-action-btn:hover { filter: brightness(1.06); }
+
+.status-action-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+.sa-confirm { background: var(--green-600); }
+.sa-packed { background: #2f6fed; }
+.sa-delivery { background: #7c4fe0; }
+.sa-delivered { background: #0e9e6b; }
+.sa-cancel { background: #d9534f; }
+
+
+/* ==================================================
+   PRODUCT MODAL
+   ================================================== */
+
+.product-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(9,20,15,.55);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.product-modal.active { display: flex; }
+
+.product-modal-content {
+    width: 100%;
+    max-width: 460px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    position: relative;
+}
+
+.product-modal-content h2 { margin-bottom: 20px; font-size: 20px; }
+
+.product-modal-content label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    margin: 14px 0 6px;
+}
+
+.product-modal-content input,
+.product-modal-content select,
+.product-modal-content textarea {
+    width: 100%;
+    padding: 12px 13px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    outline: none;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.product-modal-content input:focus,
+.product-modal-content select:focus,
+.product-modal-content textarea:focus { border-color: var(--green-600); }
+
+.product-modal-content textarea { min-height: 70px; resize: vertical; }
+
+.checkbox { display: flex; align-items: center; gap: 8px; margin-top: 16px; font-size: 13.5px; font-weight: 600; }
+.checkbox input { width: auto; }
+
+.save-btn {
+    width: 100%;
+    border: none;
+    background: var(--green-600);
+    color: white;
+    padding: 14px;
+    border-radius: var(--radius-pill);
+    font-weight: 700;
+    font-size: 14.5px;
+    margin-top: 22px;
+}
+
+.save-btn:hover { background: var(--green-700); }
+
+.close {
+    position: absolute;
+    top: 16px; right: 18px;
+    border: none;
+    background: var(--surface-2);
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    font-size: 18px;
+}
+
+#productMessage { margin-top: 12px; text-align: center; font-size: 13px; font-weight: 600; min-height: 16px; }
+
+
+/* ==================================================
+   RESPONSIVE
+   ================================================== */
+
+@media (max-width: 1100px) {
+    .dashboard-grid { grid-template-columns: 1fr; }
+    .status-panel { position: static; }
+}
+
+@media (max-width: 900px) {
+    .dashboard { grid-template-columns: 1fr; }
+    .sidebar {
+        position: static;
+        height: auto;
+        flex-direction: row;
+        overflow-x: auto;
+        align-items: center;
+        padding: 12px;
+    }
+    .sidebar-logo { padding: 4px 12px; }
+    .sidebar-btn { width: auto; white-space: nowrap; margin-bottom: 0; }
+    .sidebar-btn.logout-btn { margin-top: 0; margin-left: auto; }
+    .main-content { padding: 22px 18px 50px; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .topbar h1 { font-size: 21px; }
+}
+
+@media (max-width: 520px) {
+    .stats { grid-template-columns: 1fr; }
+    .admin-table { font-size: 12.5px; }
+}
