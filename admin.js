@@ -3,9 +3,61 @@
 // NO LOGIN VERSION
 // ============================================
 
-// Relies on globals defined by appwrite.js:
-// account, tablesDB, DATABASE_ID,
-// PRODUCTS_TABLE_ID, ORDERS_TABLE_ID
+// IMPORTANT:
+// appwrite.js must load BEFORE this file.
+//
+// appwrite.js should define:
+//   client
+//   account
+//   tablesDB
+//   storage
+//   DATABASE_ID
+//   PRODUCTS_TABLE_ID
+//   ORDERS_TABLE_ID
+//   BUCKET_ID
+//
+// DO NOT redefine those variables here.
+// ============================================
+
+
+// ============================================
+// CHECK APPWRITE
+// ============================================
+
+console.log("Loading PharmaCare Admin...");
+
+if (typeof Appwrite === "undefined") {
+    console.error("Appwrite SDK is not loaded.");
+}
+
+if (typeof tablesDB === "undefined") {
+    console.error(
+        "tablesDB is not defined. Check appwrite.js."
+    );
+}
+
+if (typeof DATABASE_ID === "undefined") {
+    console.error(
+        "DATABASE_ID is not defined. Check appwrite.js."
+    );
+}
+
+if (typeof PRODUCTS_TABLE_ID === "undefined") {
+    console.error(
+        "PRODUCTS_TABLE_ID is not defined. Check appwrite.js."
+    );
+}
+
+if (typeof ORDERS_TABLE_ID === "undefined") {
+    console.error(
+        "ORDERS_TABLE_ID is not defined. Check appwrite.js."
+    );
+}
+
+
+// ============================================
+// CACHE
+// ============================================
 
 let adminProductsCache = [];
 let adminOrdersCache = [];
@@ -14,6 +66,11 @@ let selectedOrderId = {
     dash: null,
     orders: null
 };
+
+
+// ============================================
+// ORDER STATUS
+// ============================================
 
 const STATUS_FLOW = [
     "Pending",
@@ -25,21 +82,54 @@ const STATUS_FLOW = [
 
 
 // ============================================
-// INIT
+// INITIALIZATION
 // ============================================
 
-document.addEventListener("DOMContentLoaded", async () => {
-    console.log("Admin panel loaded");
+document.addEventListener(
+    "DOMContentLoaded",
+    async function () {
 
-    // Open dashboard directly
-    const dashboard = document.getElementById("dashboard");
+        console.log(
+            "PharmaCare Admin Panel Loaded"
+        );
 
-    if (dashboard) {
-        dashboard.classList.remove("hidden");
+        const dashboard =
+            document.getElementById(
+                "dashboard"
+            );
+
+        // Show dashboard immediately
+        if (dashboard) {
+            dashboard.classList.remove(
+                "hidden"
+            );
+        }
+
+        // Remove old login if it exists
+        const login =
+            document.getElementById(
+                "adminLogin"
+            );
+
+        if (login) {
+            login.remove();
+        }
+
+        try {
+
+            await loadDashboard();
+
+        } catch (error) {
+
+            console.error(
+                "Dashboard initialization error:",
+                error
+            );
+
+        }
+
     }
-
-    await loadDashboard();
-});
+);
 
 
 // ============================================
@@ -57,43 +147,77 @@ function showSection(sectionId) {
         "settingsSection"
     ];
 
-    sections.forEach(id => {
+    sections.forEach(
+        function (id) {
 
-        const section = document.getElementById(id);
+            const section =
+                document.getElementById(id);
 
-        if (section) {
+            if (!section) {
+                return;
+            }
+
             section.classList.toggle(
                 "hidden",
                 id !== sectionId
             );
+
         }
+    );
 
-    });
 
+    // Sidebar active button
+    document
+        .querySelectorAll(".sidebar-btn")
+        .forEach(
+            function (button) {
 
-    document.querySelectorAll(".sidebar-btn").forEach(btn => {
+                const onclick =
+                    button.getAttribute(
+                        "onclick"
+                    ) || "";
 
-        const attr = btn.getAttribute("onclick") || "";
+                button.classList.toggle(
+                    "active",
+                    onclick.includes(
+                        sectionId
+                    )
+                );
 
-        btn.classList.toggle(
-            "active",
-            attr.includes(sectionId)
+            }
         );
 
-    });
 
+    // Load data when section opens
+    if (
+        sectionId ===
+        "dashboardSection"
+    ) {
 
-    if (sectionId === "dashboardSection") {
         loadDashboard();
+
     }
 
-    if (sectionId === "productsSection") {
+
+    if (
+        sectionId ===
+        "productsSection"
+    ) {
+
         loadAdminProducts();
+
     }
 
-    if (sectionId === "ordersSection") {
+
+    if (
+        sectionId ===
+        "ordersSection"
+    ) {
+
         loadOrders();
+
     }
+
 }
 
 
@@ -103,6 +227,10 @@ function showSection(sectionId) {
 
 async function loadDashboard() {
 
+    console.log(
+        "Loading dashboard..."
+    );
+
     await Promise.all([
         loadAdminProducts(),
         loadOrders()
@@ -111,51 +239,74 @@ async function loadDashboard() {
 }
 
 
+// ============================================
+// DASHBOARD STATISTICS
+// ============================================
+
 function updateDashboardStats() {
 
-    const orderCountEl =
-        document.getElementById("orderCount");
+    const orderCount =
+        document.getElementById(
+            "orderCount"
+        );
 
-    const pendingCountEl =
-        document.getElementById("pendingCount");
+    const pendingCount =
+        document.getElementById(
+            "pendingCount"
+        );
 
-    const salesTotalEl =
-        document.getElementById("salesTotal");
+    const salesTotal =
+        document.getElementById(
+            "salesTotal"
+        );
 
-    const todayCountEl =
-        document.getElementById("todayCount");
+    const todayCount =
+        document.getElementById(
+            "todayCount"
+        );
 
     const ordersBadge =
-        document.getElementById("ordersBadge");
+        document.getElementById(
+            "ordersBadge"
+        );
 
 
-    // Total Orders
-    if (orderCountEl) {
+    // Total orders
+    if (orderCount) {
 
-        orderCountEl.textContent =
+        orderCount.textContent =
             adminOrdersCache.length;
 
     }
 
 
-    // Pending Orders
+    // Pending orders
     const pending =
-        adminOrdersCache.filter(order =>
-            (order.status || "Pending") === "Pending"
+        adminOrdersCache.filter(
+            function (order) {
+
+                return (
+                    order.status ||
+                    "Pending"
+                ) === "Pending";
+
+            }
         ).length;
 
 
-    if (pendingCountEl) {
+    if (pendingCount) {
 
-        pendingCountEl.textContent = pending;
+        pendingCount.textContent =
+            pending;
 
     }
 
 
-    // Orders Badge
+    // Orders badge
     if (ordersBadge) {
 
-        ordersBadge.textContent = pending;
+        ordersBadge.textContent =
+            pending;
 
         ordersBadge.classList.toggle(
             "hidden",
@@ -165,45 +316,78 @@ function updateDashboardStats() {
     }
 
 
-    // Total Sales
-    if (salesTotalEl) {
+    // Sales
+    if (salesTotal) {
 
         const total =
             adminOrdersCache.reduce(
-                (sum, order) =>
-                    sum + Number(order.total || 0),
+                function (
+                    sum,
+                    order
+                ) {
+
+                    return (
+                        sum +
+                        Number(
+                            order.total || 0
+                        )
+                    );
+
+                },
                 0
             );
 
-        salesTotalEl.textContent =
-            "₹" + formatMoney(total);
+
+        salesTotal.textContent =
+            "₹" +
+            formatMoney(total);
 
     }
 
 
-    // Today's Orders
-    if (todayCountEl) {
+    // Today's orders
+    if (todayCount) {
 
         const today =
             new Date().toDateString();
 
+
         const count =
-            adminOrdersCache.filter(order =>
-                order.$createdAt &&
-                new Date(order.$createdAt)
-                    .toDateString() === today
+            adminOrdersCache.filter(
+                function (order) {
+
+                    if (!order.$createdAt) {
+                        return false;
+                    }
+
+                    return (
+                        new Date(
+                            order.$createdAt
+                        ).toDateString() ===
+                        today
+                    );
+
+                }
             ).length;
 
-        todayCountEl.textContent = count;
+
+        todayCount.textContent =
+            count;
 
     }
 
 }
 
 
+// ============================================
+// MONEY FORMAT
+// ============================================
+
 function formatMoney(value) {
 
-    return Number(value || 0).toLocaleString(
+    return Number(
+        value || 0
+    ).toLocaleString(
         "en-IN",
         {
             maximumFractionDigits: 2
@@ -219,19 +403,29 @@ function formatMoney(value) {
 
 async function loadAdminProducts() {
 
-    const grid =
-        document.getElementById("adminProducts");
+    const container =
+        document.getElementById(
+            "adminProducts"
+        );
 
 
     try {
 
+        console.log(
+            "Loading products..."
+        );
+
+
         const response =
             await tablesDB.listRows({
 
-                databaseId: DATABASE_ID,
+                databaseId:
+                    DATABASE_ID,
 
                 tableId:
-                    PRODUCTS_TABLE_ID
+                    PRODUCTS_TABLE_ID,
+
+                total: true
 
             });
 
@@ -240,23 +434,31 @@ async function loadAdminProducts() {
             response.rows || [];
 
 
+        console.log(
+            "Products loaded:",
+            adminProductsCache.length
+        );
+
+
         renderAdminProducts();
 
 
     } catch (error) {
 
         console.error(
-            "Load products error:",
+            "PRODUCT LOAD ERROR:",
             error
         );
 
 
-        if (grid) {
+        if (container) {
 
-            grid.innerHTML =
+            container.innerHTML =
                 "<div class='loading-state'>" +
-                "Unable to load products. " +
-                escapeHTML(error.message) +
+                "<strong>Unable to load products.</strong><br><br>" +
+                escapeHTML(
+                    getErrorMessage(error)
+                ) +
                 "</div>";
 
         }
@@ -266,20 +468,30 @@ async function loadAdminProducts() {
 }
 
 
+// ============================================
+// RENDER PRODUCTS
+// ============================================
+
 function renderAdminProducts() {
 
-    const grid =
-        document.getElementById("adminProducts");
+    const container =
+        document.getElementById(
+            "adminProducts"
+        );
 
 
-    if (!grid) return;
+    if (!container) {
+        return;
+    }
 
 
-    if (!adminProductsCache.length) {
+    if (
+        !adminProductsCache.length
+    ) {
 
-        grid.innerHTML =
+        container.innerHTML =
             "<div class='loading-state'>" +
-            "No products yet. " +
+            "No products yet.<br><br>" +
             "Click \"+ Add Medicine\" to create one." +
             "</div>";
 
@@ -288,60 +500,77 @@ function renderAdminProducts() {
     }
 
 
-    let rows =
-        adminProductsCache.map(function (product) {
+    const rows =
+        adminProductsCache
+            .map(
+                function (product) {
 
-            return (
-                "<tr>" +
+                    return (
 
-                "<td><strong>" +
-                escapeHTML(product.name || "") +
-                "</strong></td>" +
+                        "<tr>" +
 
-                "<td>" +
-                escapeHTML(product.category || "") +
-                "</td>" +
+                        "<td>" +
+                        "<strong>" +
+                        escapeHTML(
+                            product.name ||
+                            ""
+                        ) +
+                        "</strong>" +
+                        "</td>" +
 
-                "<td>₹" +
-                Number(product.price || 0)
-                    .toFixed(2) +
-                "</td>" +
+                        "<td>" +
+                        escapeHTML(
+                            product.category ||
+                            ""
+                        ) +
+                        "</td>" +
 
-                "<td>" +
-                Number(product.stock || 0) +
-                "</td>" +
+                        "<td>₹" +
+                        Number(
+                            product.price || 0
+                        ).toFixed(2) +
+                        "</td>" +
 
-                "<td>" +
-                (
-                    product.prescriptionRequired
-                        ? "Yes"
-                        : "No"
-                ) +
-                "</td>" +
+                        "<td>" +
+                        Number(
+                            product.stock || 0
+                        ) +
+                        "</td>" +
 
-                "<td>" +
+                        "<td>" +
+                        (
+                            product.prescriptionRequired
+                                ? "Yes"
+                                : "No"
+                        ) +
+                        "</td>" +
 
-                "<button class='danger-btn' " +
+                        "<td>" +
 
-                "onclick=\"deleteProduct('" +
+                        "<button " +
+                        "class='danger-btn' " +
+                        "onclick=\"deleteProduct('" +
+                        escapeAttribute(
+                            product.$id
+                        ) +
+                        "')\">" +
 
-                escapeAttribute(product.$id) +
+                        "Delete" +
 
-                "')\">" +
+                        "</button>" +
 
-                "Delete" +
+                        "</td>" +
 
-                "</button>" +
+                        "</tr>"
 
-                "</td>" +
+                    );
 
-                "</tr>"
-            );
+                }
+            )
+            .join("");
 
-        }).join("");
 
-
-    grid.innerHTML =
+    container.innerHTML =
 
         "<table class='admin-table'>" +
 
@@ -354,7 +583,7 @@ function renderAdminProducts() {
         "<th>Price</th>" +
         "<th>Stock</th>" +
         "<th>Rx</th>" +
-        "<th></th>" +
+        "<th>Action</th>" +
 
         "</tr>" +
 
@@ -371,9 +600,19 @@ function renderAdminProducts() {
 }
 
 
-async function deleteProduct(productId) {
+// ============================================
+// DELETE PRODUCT
+// ============================================
 
-    if (!confirm("Delete this product?")) {
+async function deleteProduct(
+    productId
+) {
+
+    if (
+        !confirm(
+            "Delete this product?"
+        )
+    ) {
         return;
     }
 
@@ -394,20 +633,25 @@ async function deleteProduct(productId) {
         });
 
 
+        alert(
+            "Product deleted successfully."
+        );
+
+
         await loadAdminProducts();
 
 
     } catch (error) {
 
         console.error(
-            "Delete product error:",
+            "DELETE PRODUCT ERROR:",
             error
         );
 
 
         alert(
-            "Unable to delete product:\n\n" +
-            error.message
+            "Unable to delete product.\n\n" +
+            getErrorMessage(error)
         );
 
     }
@@ -421,18 +665,38 @@ async function deleteProduct(productId) {
 
 function openProductModal() {
 
-    document
-        .getElementById("productModal")
-        ?.classList.add("active");
+    const modal =
+        document.getElementById(
+            "productModal"
+        );
+
+
+    if (modal) {
+
+        modal.classList.add(
+            "active"
+        );
+
+    }
 
 }
 
 
 function closeProductModal() {
 
-    document
-        .getElementById("productModal")
-        ?.classList.remove("active");
+    const modal =
+        document.getElementById(
+            "productModal"
+        );
+
+
+    if (modal) {
+
+        modal.classList.remove(
+            "active"
+        );
+
+    }
 
 }
 
@@ -444,25 +708,39 @@ function closeProductModal() {
 async function addProduct() {
 
     const nameEl =
-        document.getElementById("productName");
+        document.getElementById(
+            "productName"
+        );
 
     const categoryEl =
-        document.getElementById("productCategory");
+        document.getElementById(
+            "productCategory"
+        );
 
     const descriptionEl =
-        document.getElementById("productDescription");
+        document.getElementById(
+            "productDescription"
+        );
 
     const priceEl =
-        document.getElementById("productPrice");
+        document.getElementById(
+            "productPrice"
+        );
 
     const discountEl =
-        document.getElementById("productDiscount");
+        document.getElementById(
+            "productDiscount"
+        );
 
     const stockEl =
-        document.getElementById("productStock");
+        document.getElementById(
+            "productStock"
+        );
 
     const imageEl =
-        document.getElementById("productImage");
+        document.getElementById(
+            "productImage"
+        );
 
     const prescriptionEl =
         document.getElementById(
@@ -470,7 +748,9 @@ async function addProduct() {
         );
 
     const message =
-        document.getElementById("productMessage");
+        document.getElementById(
+            "productMessage"
+        );
 
 
     if (
@@ -479,7 +759,13 @@ async function addProduct() {
         !priceEl ||
         !stockEl
     ) {
+
+        console.error(
+            "Product form elements missing."
+        );
+
         return;
+
     }
 
 
@@ -495,15 +781,22 @@ async function addProduct() {
             : "";
 
     const price =
-        Number(priceEl.value);
+        Number(
+            priceEl.value
+        );
 
     const discountPrice =
-        discountEl && discountEl.value
-            ? Number(discountEl.value)
+        discountEl &&
+        discountEl.value !== ""
+            ? Number(
+                discountEl.value
+            )
             : null;
 
     const stock =
-        Number(stockEl.value);
+        Number(
+            stockEl.value
+        );
 
     const image =
         imageEl
@@ -518,26 +811,59 @@ async function addProduct() {
 
     if (message) {
 
-        message.style.color = "#d22";
+        message.style.color =
+            "#d22";
+
         message.textContent = "";
 
     }
 
 
+    // Validation
+    if (!name) {
+
+        showProductError(
+            "Please enter medicine name."
+        );
+
+        return;
+
+    }
+
+
+    if (!category) {
+
+        showProductError(
+            "Please select a category."
+        );
+
+        return;
+
+    }
+
+
     if (
-        !name ||
-        !category ||
-        !price ||
         Number.isNaN(price) ||
-        Number.isNaN(stock)
+        price <= 0
     ) {
 
-        if (message) {
+        showProductError(
+            "Please enter a valid price."
+        );
 
-            message.textContent =
-                "Please fill in name, category, price and stock.";
+        return;
 
-        }
+    }
+
+
+    if (
+        Number.isNaN(stock) ||
+        stock < 0
+    ) {
+
+        showProductError(
+            "Please enter a valid stock quantity."
+        );
 
         return;
 
@@ -545,6 +871,11 @@ async function addProduct() {
 
 
     try {
+
+        console.log(
+            "Creating product..."
+        );
+
 
         await tablesDB.createRow({
 
@@ -559,18 +890,38 @@ async function addProduct() {
 
             data: {
 
-                name,
-                category,
-                description,
-                price,
-                discountPrice,
-                stock,
-                image,
-                prescriptionRequired
+                name:
+                    name,
+
+                category:
+                    category,
+
+                description:
+                    description,
+
+                price:
+                    price,
+
+                discountPrice:
+                    discountPrice,
+
+                stock:
+                    stock,
+
+                image:
+                    image,
+
+                prescriptionRequired:
+                    prescriptionRequired
 
             }
 
         });
+
+
+        console.log(
+            "Product created."
+        );
 
 
         if (message) {
@@ -579,12 +930,12 @@ async function addProduct() {
                 "#087f5b";
 
             message.textContent =
-                "Product added!";
+                "Product added successfully!";
 
         }
 
 
-        // Reset Form
+        // Reset
         nameEl.value = "";
 
         if (descriptionEl) {
@@ -604,7 +955,8 @@ async function addProduct() {
         }
 
         if (prescriptionEl) {
-            prescriptionEl.checked = false;
+            prescriptionEl.checked =
+                false;
         }
 
 
@@ -612,7 +964,11 @@ async function addProduct() {
 
 
         setTimeout(
-            closeProductModal,
+            function () {
+
+                closeProductModal();
+
+            },
             800
         );
 
@@ -620,21 +976,41 @@ async function addProduct() {
     } catch (error) {
 
         console.error(
-            "Add product error:",
+            "CREATE PRODUCT ERROR:",
             error
         );
 
 
-        if (message) {
+        showProductError(
+            getErrorMessage(error)
+        );
 
-            message.style.color =
-                "#d22";
+    }
 
-            message.textContent =
-                error.message ||
-                "Unable to add product.";
+}
 
-        }
+
+// ============================================
+// PRODUCT ERROR
+// ============================================
+
+function showProductError(
+    messageText
+) {
+
+    const message =
+        document.getElementById(
+            "productMessage"
+        );
+
+
+    if (message) {
+
+        message.style.color =
+            "#d22";
+
+        message.textContent =
+            messageText;
 
     }
 
@@ -649,6 +1025,11 @@ async function loadOrders() {
 
     try {
 
+        console.log(
+            "Loading orders..."
+        );
+
+
         const response =
             await tablesDB.listRows({
 
@@ -656,70 +1037,81 @@ async function loadOrders() {
                     DATABASE_ID,
 
                 tableId:
-                    ORDERS_TABLE_ID
+                    ORDERS_TABLE_ID,
+
+                total: true
 
             });
 
 
         adminOrdersCache =
-            (response.rows || []).sort(
-                function (a, b) {
-
-                    return (
-                        new Date(
-                            b.$createdAt || 0
-                        ) -
-
-                        new Date(
-                            a.$createdAt || 0
-                        )
-                    );
-
-                }
-            );
+            response.rows || [];
 
 
-        // Recent Orders
-        renderOrdersTable(
+        adminOrdersCache.sort(
+            function (a, b) {
 
-            "recentOrders",
+                return (
 
-            adminOrdersCache.slice(0, 6),
+                    new Date(
+                        b.$createdAt || 0
+                    ) -
 
-            "dash"
+                    new Date(
+                        a.$createdAt || 0
+                    )
 
+                );
+
+            }
         );
 
 
-        // All Orders
+        console.log(
+            "Orders loaded:",
+            adminOrdersCache.length
+        );
+
+
         renderOrdersTable(
+            "recentOrders",
+            adminOrdersCache.slice(
+                0,
+                6
+            ),
+            "dash"
+        );
 
+
+        renderOrdersTable(
             "adminOrders",
-
             adminOrdersCache,
-
             "orders"
-
         );
 
 
         updateDashboardStats();
 
 
-        // Refresh status panels
-        ["dash", "orders"].forEach(
+        // Refresh selected order
+        [
+            "dash",
+            "orders"
+        ].forEach(
             function (context) {
 
                 if (
-                    selectedOrderId[context]
+                    selectedOrderId[
+                        context
+                    ]
                 ) {
 
                     const order =
                         adminOrdersCache.find(
-                            function (order) {
+                            function (item) {
 
                                 return (
-                                    order.$id ===
+                                    item.$id ===
                                     selectedOrderId[
                                         context
                                     ]
@@ -753,19 +1145,17 @@ async function loadOrders() {
     } catch (error) {
 
         console.error(
-            "Load orders error:",
+            "LOAD ORDERS ERROR:",
             error
         );
 
 
         const html =
-
             "<div class='loading-state'>" +
-
-            "Unable to load orders. " +
-
-            escapeHTML(error.message) +
-
+            "<strong>Unable to load orders.</strong><br><br>" +
+            escapeHTML(
+                getErrorMessage(error)
+            ) +
             "</div>";
 
 
@@ -781,11 +1171,13 @@ async function loadOrders() {
 
 
         if (recent) {
-            recent.innerHTML = html;
+            recent.innerHTML =
+                html;
         }
 
         if (all) {
-            all.innerHTML = html;
+            all.innerHTML =
+                html;
         }
 
     }
@@ -794,7 +1186,7 @@ async function loadOrders() {
 
 
 // ============================================
-// RENDER ORDERS TABLE
+// RENDER ORDERS
 // ============================================
 
 function renderOrdersTable(
@@ -809,7 +1201,9 @@ function renderOrdersTable(
         );
 
 
-    if (!container) return;
+    if (!container) {
+        return;
+    }
 
 
     if (!orders.length) {
@@ -825,133 +1219,131 @@ function renderOrdersTable(
 
 
     const rows =
-        orders.map(function (order) {
+        orders.map(
+            function (order) {
 
-            const status =
-                order.status ||
-                "Pending";
-
-            const statusClass =
-                status
-                    .toLowerCase()
-                    .replace(
-                        /\s+/g,
-                        "-"
-                    );
-
-            const shortId =
-                String(order.$id)
-                    .slice(-6);
-
-            const date =
-                order.$createdAt
-                    ? new Date(
-                        order.$createdAt
-                    ).toLocaleDateString()
-                    : "—";
-
-            const isSelected =
-                selectedOrderId[
-                    context
-                ] === order.$id;
+                const status =
+                    order.status ||
+                    "Pending";
 
 
-            return (
-
-                "<tr class='" +
-
-                (
-                    isSelected
-                        ? "row-selected"
-                        : ""
-                ) +
-
-                "' " +
-
-                "onclick=\"selectOrder('" +
-
-                escapeAttribute(
-                    order.$id
-                ) +
-
-                "','" +
-
-                context +
-
-                "')\">" +
-
-
-                "<td>#" +
-
-                escapeHTML(
-                    shortId
-                ) +
-
-                "</td>" +
-
-
-                "<td>" +
-
-                escapeHTML(
-                    order.customerName ||
-                    "Customer"
-                ) +
-
-                "</td>" +
-
-
-                "<td>" +
-
-                escapeHTML(
-                    order.phone ||
-                    ""
-                ) +
-
-                "</td>" +
-
-
-                "<td>₹" +
-
-                Number(
-                    order.total || 0
-                ).toFixed(2) +
-
-                "</td>" +
-
-
-                "<td>" +
-
-                "<span class='status-badge status-" +
-
-                escapeAttribute(
-                    statusClass
-                ) +
-
-                "'>" +
-
-                escapeHTML(
+                const statusClass =
                     status
-                ) +
-
-                "</span>" +
-
-                "</td>" +
-
-
-                "<td>" +
-
-                escapeHTML(
-                    date
-                ) +
-
-                "</td>" +
+                        .toLowerCase()
+                        .replace(
+                            /\s+/g,
+                            "-"
+                        );
 
 
-                "</tr>"
+                const shortId =
+                    String(
+                        order.$id
+                    ).slice(-6);
 
-            );
 
-        }).join("");
+                const date =
+                    order.$createdAt
+                        ? new Date(
+                            order.$createdAt
+                        ).toLocaleDateString(
+                            "en-IN"
+                        )
+                        : "—";
+
+
+                const selected =
+                    selectedOrderId[
+                        context
+                    ] === order.$id;
+
+
+                return (
+
+                    "<tr class='" +
+
+                    (
+                        selected
+                            ? "row-selected"
+                            : ""
+                    ) +
+
+                    "' onclick=\"selectOrder('" +
+
+                    escapeAttribute(
+                        order.$id
+                    ) +
+
+                    "','" +
+
+                    context +
+
+                    "')\">" +
+
+
+                    "<td>#" +
+                    escapeHTML(
+                        shortId
+                    ) +
+                    "</td>" +
+
+
+                    "<td>" +
+                    escapeHTML(
+                        order.customerName ||
+                        "Customer"
+                    ) +
+                    "</td>" +
+
+
+                    "<td>" +
+                    escapeHTML(
+                        order.phone ||
+                        ""
+                    ) +
+                    "</td>" +
+
+
+                    "<td>₹" +
+                    Number(
+                        order.total || 0
+                    ).toFixed(2) +
+                    "</td>" +
+
+
+                    "<td>" +
+
+                    "<span class='status-badge status-" +
+
+                    escapeAttribute(
+                        statusClass
+                    ) +
+
+                    "'>" +
+
+                    escapeHTML(
+                        status
+                    ) +
+
+                    "</span>" +
+
+                    "</td>" +
+
+
+                    "<td>" +
+                    escapeHTML(
+                        date
+                    ) +
+                    "</td>" +
+
+
+                    "</tr>"
+
+                );
+
+            }
+        )
+        .join("");
 
 
     container.innerHTML =
@@ -985,7 +1377,7 @@ function renderOrdersTable(
 
 
 // ============================================
-// STATUS PANEL
+// SELECT ORDER
 // ============================================
 
 function selectOrder(
@@ -1000,12 +1392,20 @@ function selectOrder(
 
     const order =
         adminOrdersCache.find(
-            order =>
-                order.$id === orderId
+            function (item) {
+
+                return (
+                    item.$id ===
+                    orderId
+                );
+
+            }
         );
 
 
-    if (!order) return;
+    if (!order) {
+        return;
+    }
 
 
     renderStatusPanel(
@@ -1014,18 +1414,27 @@ function selectOrder(
     );
 
 
-    if (context === "dash") {
+    if (
+        context ===
+        "dash"
+    ) {
 
         renderOrdersTable(
             "recentOrders",
-            adminOrdersCache.slice(0, 6),
+            adminOrdersCache.slice(
+                0,
+                6
+            ),
             "dash"
         );
 
     }
 
 
-    if (context === "orders") {
+    if (
+        context ===
+        "orders"
+    ) {
 
         renderOrdersTable(
             "adminOrders",
@@ -1038,6 +1447,10 @@ function selectOrder(
 }
 
 
+// ============================================
+// CLEAR STATUS PANEL
+// ============================================
+
 function clearStatusPanel(
     context
 ) {
@@ -1047,41 +1460,37 @@ function clearStatusPanel(
     ] = null;
 
 
-    const refEl =
+    const ref =
         document.getElementById(
 
             context === "dash"
-
                 ? "dashOrderRef"
-
                 : "ordersOrderRef"
 
         );
 
 
-    const actionsEl =
+    const actions =
         document.getElementById(
 
             context === "dash"
-
                 ? "dashStatusActions"
-
                 : "ordersStatusActions"
 
         );
 
 
-    if (refEl) {
+    if (ref) {
 
-        refEl.textContent =
+        ref.textContent =
             "No order selected";
 
     }
 
 
-    if (actionsEl) {
+    if (actions) {
 
-        actionsEl.innerHTML =
+        actions.innerHTML =
             "<div class='empty-state'>" +
             "Click any order row to update its status." +
             "</div>";
@@ -1091,36 +1500,36 @@ function clearStatusPanel(
 }
 
 
+// ============================================
+// STATUS PANEL
+// ============================================
+
 function renderStatusPanel(
     context,
     order
 ) {
 
-    const refEl =
+    const ref =
         document.getElementById(
 
             context === "dash"
-
                 ? "dashOrderRef"
-
                 : "ordersOrderRef"
 
         );
 
 
-    const actionsEl =
+    const actions =
         document.getElementById(
 
             context === "dash"
-
                 ? "dashStatusActions"
-
                 : "ordersStatusActions"
 
         );
 
 
-    if (!refEl || !actionsEl) {
+    if (!ref || !actions) {
         return;
     }
 
@@ -1129,19 +1538,24 @@ function renderStatusPanel(
         order.status ||
         "Pending";
 
+
     const shortId =
-        String(order.$id)
-            .slice(-6);
+        String(
+            order.$id
+        ).slice(-6);
 
 
-    refEl.textContent =
+    ref.textContent =
         "Order ID: #" +
         shortId;
 
 
-    if (status === "Cancelled") {
+    if (
+        status ===
+        "Cancelled"
+    ) {
 
-        actionsEl.innerHTML =
+        actions.innerHTML =
             "<div class='empty-state'>" +
             "This order was cancelled." +
             "</div>";
@@ -1151,9 +1565,12 @@ function renderStatusPanel(
     }
 
 
-    if (status === "Delivered") {
+    if (
+        status ===
+        "Delivered"
+    ) {
 
-        actionsEl.innerHTML =
+        actions.innerHTML =
             "<div class='empty-state'>" +
             "✅ This order has been delivered." +
             "</div>";
@@ -1171,28 +1588,25 @@ function renderStatusPanel(
 
     const buttons = [];
 
-    const id =
-        escapeAttribute(
-            order.$id
-        );
 
-    const ctx =
-        context;
-
-
-    if (currentIndex === 0) {
+    if (
+        currentIndex === 0
+    ) {
 
         buttons.push(
 
-            "<button class='status-action-btn sa-confirm' " +
+            "<button " +
+            "class='status-action-btn sa-confirm' " +
 
             "onclick=\"updateOrderStatus('" +
 
-            id +
+            escapeAttribute(
+                order.$id
+            ) +
 
             "','Confirmed','" +
 
-            ctx +
+            context +
 
             "')\">" +
 
@@ -1205,19 +1619,24 @@ function renderStatusPanel(
     }
 
 
-    if (currentIndex === 1) {
+    if (
+        currentIndex === 1
+    ) {
 
         buttons.push(
 
-            "<button class='status-action-btn sa-packed' " +
+            "<button " +
+            "class='status-action-btn sa-packed' " +
 
             "onclick=\"updateOrderStatus('" +
 
-            id +
+            escapeAttribute(
+                order.$id
+            ) +
 
             "','Packed','" +
 
-            ctx +
+            context +
 
             "')\">" +
 
@@ -1230,20 +1649,26 @@ function renderStatusPanel(
     }
 
 
-    if (currentIndex === 2) {
+    if (
+        currentIndex === 2
+    ) {
 
         buttons.push(
 
-            "<button class='status-action-btn sa-delivery' " +
+            "<button " +
+            "class='status-action-btn sa-delivery' " +
 
             "onclick=\"markOutForDelivery('" +
 
-            id +
+            escapeAttribute(
+                order.$id
+            ) +
 
             "','" +
 
             escapeAttribute(
-                order.phone || ""
+                order.phone ||
+                ""
             ) +
 
             "','" +
@@ -1255,7 +1680,7 @@ function renderStatusPanel(
 
             "','" +
 
-            ctx +
+            context +
 
             "')\">" +
 
@@ -1268,19 +1693,24 @@ function renderStatusPanel(
     }
 
 
-    if (currentIndex === 3) {
+    if (
+        currentIndex === 3
+    ) {
 
         buttons.push(
 
-            "<button class='status-action-btn sa-delivered' " +
+            "<button " +
+            "class='status-action-btn sa-delivered' " +
 
             "onclick=\"updateOrderStatus('" +
 
-            id +
+            escapeAttribute(
+                order.$id
+            ) +
 
             "','Delivered','" +
 
-            ctx +
+            context +
 
             "')\">" +
 
@@ -1295,15 +1725,18 @@ function renderStatusPanel(
 
     buttons.push(
 
-        "<button class='status-action-btn sa-cancel' " +
+        "<button " +
+        "class='status-action-btn sa-cancel' " +
 
         "onclick=\"cancelOrder('" +
 
-        id +
+        escapeAttribute(
+            order.$id
+        ) +
 
         "','" +
 
-        ctx +
+        context +
 
         "')\">" +
 
@@ -1314,7 +1747,7 @@ function renderStatusPanel(
     );
 
 
-    actionsEl.innerHTML =
+    actions.innerHTML =
         buttons.join("");
 
 }
@@ -1332,6 +1765,13 @@ async function updateOrderStatus(
 
     try {
 
+        console.log(
+            "Updating order:",
+            orderId,
+            newStatus
+        );
+
+
         await tablesDB.updateRow({
 
             databaseId:
@@ -1344,8 +1784,10 @@ async function updateOrderStatus(
                 orderId,
 
             data: {
+
                 status:
                     newStatus
+
             }
 
         });
@@ -1357,23 +1799,24 @@ async function updateOrderStatus(
     } catch (error) {
 
         console.error(
-            "Update order status error:",
+            "UPDATE ORDER ERROR:",
             error
         );
 
 
         alert(
-
-            "Unable to update order status:\n\n" +
-
-            error.message
-
+            "Unable to update order.\n\n" +
+            getErrorMessage(error)
         );
 
     }
 
 }
 
+
+// ============================================
+// CANCEL ORDER
+// ============================================
 
 function cancelOrder(
     orderId,
@@ -1382,10 +1825,12 @@ function cancelOrder(
 
     if (
         !confirm(
-            "Cancel this order? This cannot be undone."
+            "Cancel this order?\n\nThis cannot be undone."
         )
     ) {
+
         return;
+
     }
 
 
@@ -1399,7 +1844,7 @@ function cancelOrder(
 
 
 // ============================================
-// OUT FOR DELIVERY + WHATSAPP
+// OUT FOR DELIVERY
 // ============================================
 
 async function markOutForDelivery(
@@ -1424,44 +1869,43 @@ async function markOutForDelivery(
     const message =
 
         "Hi " +
-
         customerName +
-
         ", your PharmaCare order #" +
-
         String(orderId).slice(-6) +
+        " is out for delivery! 🚚 " +
+        "It should reach you soon.";
 
-        " is out for delivery! 🚚 It should reach you soon.";
 
-
-    const cleaned =
+    const phone =
         cleanPhoneForWhatsApp(
             customerPhone
         );
 
 
-    if (cleaned) {
-
-        window.open(
-
-            "https://wa.me/" +
-
-            cleaned +
-
-            "?text=" +
-
-            encodeURIComponent(
-                message
-            ),
-
-            "_blank"
-
-        );
-
+    if (!phone) {
+        return;
     }
+
+
+    window.open(
+
+        "https://wa.me/" +
+        phone +
+        "?text=" +
+        encodeURIComponent(
+            message
+        ),
+
+        "_blank"
+
+    );
 
 }
 
+
+// ============================================
+// WHATSAPP PHONE
+// ============================================
 
 function cleanPhoneForWhatsApp(
     phone
@@ -1480,10 +1924,14 @@ function cleanPhoneForWhatsApp(
     }
 
 
-    if (digits.length === 10) {
+    if (
+        digits.length ===
+        10
+    ) {
 
         digits =
-            "91" + digits;
+            "91" +
+            digits;
 
     }
 
@@ -1494,10 +1942,51 @@ function cleanPhoneForWhatsApp(
 
 
 // ============================================
-// ESCAPE HELPERS
+// ERROR MESSAGE
 // ============================================
 
-function escapeHTML(value) {
+function getErrorMessage(
+    error
+) {
+
+    if (!error) {
+        return "Unknown error";
+    }
+
+
+    if (
+        error.message
+    ) {
+
+        return error.message;
+
+    }
+
+
+    try {
+
+        return JSON.stringify(
+            error
+        );
+
+    } catch (e) {
+
+        return String(
+            error
+        );
+
+    }
+
+}
+
+
+// ============================================
+// ESCAPE HTML
+// ============================================
+
+function escapeHTML(
+    value
+) {
 
     const div =
         document.createElement(
@@ -1516,7 +2005,13 @@ function escapeHTML(value) {
 }
 
 
-function escapeAttribute(value) {
+// ============================================
+// ESCAPE ATTRIBUTE
+// ============================================
+
+function escapeAttribute(
+    value
+) {
 
     return String(
         value == null
@@ -1553,7 +2048,7 @@ function escapeAttribute(value) {
 
 
 // ============================================
-// EXPOSE GLOBAL FUNCTIONS
+// GLOBAL FUNCTIONS
 // ============================================
 
 window.showSection =
@@ -1570,6 +2065,9 @@ window.addProduct =
 
 window.deleteProduct =
     deleteProduct;
+
+window.loadAdminProducts =
+    loadAdminProducts;
 
 window.loadOrders =
     loadOrders;
@@ -1588,5 +2086,5 @@ window.markOutForDelivery =
 
 
 console.log(
-    "PharmaCare admin panel loaded successfully."
+    "✅ PharmaCare Admin JS ready"
 );
