@@ -1,281 +1,449 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PharmaCare Admin</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>PharmaCare Admin</title>
 
-<link rel="stylesheet" href="admin.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-<script src="https://cdn.jsdelivr.net/npm/appwrite@23.0.0"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="admin.css">
+
+  <!-- Appwrite SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/appwrite@23.0.0"></script>
 </head>
+
 <body>
 
-<!-- ============ ADMIN LOGIN ============ -->
-<div id="adminLogin" class="admin-login">
-
-    <div class="login-box">
-
-        <div class="admin-logo">✚</div>
-
-        <h1>Admin Panel</h1>
-        <p>PharmaCare Management</p>
-
-        <input type="email" id="adminEmail" placeholder="Admin email">
-        <input type="password" id="adminPassword" placeholder="Password">
-
-        <button onclick="adminLogin()">Login</button>
-
-        <p id="adminLoginMessage"></p>
-
-    </div>
-
-</div>
-
-
-<!-- ============ DASHBOARD SHELL ============ -->
-<div id="dashboard" class="dashboard hidden">
+  <!-- ===== DASHBOARD ===== -->
+  <div id="dashboard" class="dashboard">
 
     <!-- SIDEBAR -->
     <aside class="sidebar">
 
-        <div class="sidebar-logo">✚ PharmaCare</div>
+      <div class="sidebar-logo">✚ PharmaCare</div>
 
-        <button class="sidebar-btn active" onclick="showSection('dashboardSection')">📊 Dashboard</button>
-        <button class="sidebar-btn" onclick="showSection('productsSection')">💊 Products</button>
-        <button class="sidebar-btn" onclick="showSection('ordersSection')">📦 Orders <span class="badge hidden" id="ordersBadge">0</span></button>
-        <button class="sidebar-btn" onclick="showSection('customersSection')">👥 Customers</button>
-        <button class="sidebar-btn" onclick="showSection('reportsSection')">📈 Reports</button>
-        <button class="sidebar-btn" onclick="showSection('settingsSection')">⚙️ Settings</button>
+      <button class="sidebar-btn active"
+        onclick="showSection('dashboardSection')">
+        📊 Dashboard
+      </button>
 
-        <button class="sidebar-btn logout-btn" onclick="adminLogout()">🚪 Logout</button>
+      <button class="sidebar-btn"
+        onclick="showSection('productsSection')">
+        💊 Products
+      </button>
+
+      <button class="sidebar-btn"
+        onclick="showSection('ordersSection')">
+        📦 Orders
+        <span class="badge hidden" id="ordersBadge">0</span>
+      </button>
+
+      <button class="sidebar-btn"
+        onclick="showSection('customersSection')">
+        👥 Customers
+      </button>
+
+      <button class="sidebar-btn"
+        onclick="showSection('reportsSection')">
+        📈 Reports
+      </button>
+
+      <button class="sidebar-btn"
+        onclick="showSection('settingsSection')">
+        ⚙️ Settings
+      </button>
 
     </aside>
 
 
-    <!-- MAIN -->
+    <!-- MAIN CONTENT -->
     <main class="main-content">
 
+      <!-- DASHBOARD SECTION -->
+      <section id="dashboardSection">
 
-        <!-- DASHBOARD -->
-        <section id="dashboardSection">
+        <div class="topbar">
+          <div>
+            <span class="eyebrow">ADMIN PANEL</span>
+            <h1>Dashboard</h1>
+          </div>
 
-            <div class="topbar">
-                <div>
-                    <span class="eyebrow">ADMIN PANEL</span>
-                    <h1>Dashboard</h1>
-                </div>
-                <div id="adminUser">👤 Admin</div>
+          <div id="adminUser">👤 Admin</div>
+        </div>
+
+
+        <!-- STATS -->
+        <div class="stats">
+
+          <div class="stat-card stat-orders">
+            <span class="stat-icon">📋</span>
+
+            <div class="stat-body">
+              <span class="label">Total Orders</span>
+              <strong id="orderCount">—</strong>
+              <small>All time</small>
+            </div>
+          </div>
+
+
+          <div class="stat-card stat-pending">
+            <span class="stat-icon">⏳</span>
+
+            <div class="stat-body">
+              <span class="label">Pending Orders</span>
+              <strong id="pendingCount">—</strong>
+              <small>Awaiting confirmation</small>
+            </div>
+          </div>
+
+
+          <div class="stat-card stat-sales">
+            <span class="stat-icon">💰</span>
+
+            <div class="stat-body">
+              <span class="label">Total Sales</span>
+              <strong id="salesTotal">—</strong>
+              <small>Combined value</small>
+            </div>
+          </div>
+
+
+          <div class="stat-card stat-today">
+            <span class="stat-icon">📅</span>
+
+            <div class="stat-body">
+              <span class="label">Today's Orders</span>
+              <strong id="todayCount">—</strong>
+              <small>Since midnight</small>
+            </div>
+          </div>
+
+        </div>
+
+
+        <!-- RECENT ORDERS -->
+        <div class="dashboard-grid">
+
+          <div class="panel" style="margin-bottom:0">
+
+            <div class="panel-header">
+              <h2>Recent Orders</h2>
+
+              <button class="refresh-btn"
+                onclick="loadOrders()">
+                🔄 Refresh
+              </button>
             </div>
 
-            <div class="stats">
+            <div id="recentOrders" class="table-wrapper">
+              <div class="loading-state">Loading…</div>
+            </div>
 
-                <div class="stat-card stat-orders">
-                    <span class="stat-icon">📋</span>
-                    <div class="stat-body"><span class="label">Total Orders</span><strong id="orderCount">0</strong><small>All time</small></div>
-                </div>
+          </div>
 
-                <div class="stat-card stat-pending">
-                    <span class="stat-icon">⏳</span>
-                    <div class="stat-body"><span class="label">Pending Orders</span><strong id="pendingCount">0</strong><small>Awaiting confirmation</small></div>
-                </div>
 
-                <div class="stat-card stat-sales">
-                    <span class="stat-icon">💰</span>
-                    <div class="stat-body"><span class="label">Total Sales</span><strong id="salesTotal">₹0</strong><small>Combined order value</small></div>
-                </div>
+          <!-- ORDER STATUS -->
+          <div class="status-panel">
 
-                <div class="stat-card stat-today">
-                    <span class="stat-icon">📅</span>
-                    <div class="stat-body"><span class="label">Today's Orders</span><strong id="todayCount">0</strong><small>Since midnight</small></div>
-                </div>
+            <h2>Update Order Status</h2>
+
+            <p class="order-ref" id="dashOrderRef">
+              No order selected
+            </p>
+
+            <div id="dashStatusActions">
+              <div class="empty-state">
+                Click any order row to update its status.
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- PRODUCTS SECTION -->
+      <section id="productsSection" class="hidden">
+
+        <div class="topbar">
+
+          <div>
+            <span class="eyebrow">INVENTORY</span>
+            <h1>Products</h1>
+          </div>
+
+          <button class="add-btn"
+            onclick="openProductModal()">
+            + Add Medicine
+          </button>
+
+        </div>
+
+
+        <div class="panel">
+
+          <div id="adminProducts" class="table-wrapper">
+            <div class="loading-state">Loading…</div>
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ORDERS SECTION -->
+      <section id="ordersSection" class="hidden">
+
+        <div class="topbar">
+
+          <div>
+            <span class="eyebrow">SALES</span>
+            <h1>Orders</h1>
+          </div>
+
+          <button class="refresh-btn"
+            onclick="loadOrders()">
+            🔄 Refresh
+          </button>
+
+        </div>
+
+
+        <div class="dashboard-grid">
+
+          <div class="panel" style="margin-bottom:0">
+
+            <div id="adminOrders" class="table-wrapper">
+              <div class="loading-state">Loading…</div>
+            </div>
+
+          </div>
+
+
+          <div class="status-panel">
+
+            <h2>Update Order Status</h2>
+
+            <p class="order-ref" id="ordersOrderRef">
+              No order selected
+            </p>
+
+            <div id="ordersStatusActions">
+
+              <div class="empty-state">
+                Click any order row to update its status.
+              </div>
 
             </div>
 
-            <div class="dashboard-grid">
+          </div>
 
-                <div class="panel" style="margin-bottom:0;">
-                    <div class="panel-header">
-                        <h2>Recent Orders</h2>
-                        <button class="refresh-btn" onclick="loadOrders()">🔄 Refresh</button>
-                    </div>
-                    <div id="recentOrders" class="table-wrapper"></div>
-                </div>
+        </div>
 
-                <div class="status-panel">
-                    <h2>Update Order Status</h2>
-                    <p class="order-ref" id="dashOrderRef">No order selected</p>
-                    <div id="dashStatusActions">
-                        <div class="empty-state">Click any order row to update its status.</div>
-                    </div>
-                </div>
-
-            </div>
-
-        </section>
+      </section>
 
 
-        <!-- PRODUCTS -->
-        <section id="productsSection" class="hidden">
+      <!-- CUSTOMERS SECTION -->
+      <section id="customersSection" class="hidden">
 
-            <div class="topbar">
-                <div>
-                    <span class="eyebrow">INVENTORY</span>
-                    <h1>Products</h1>
-                </div>
-                <button class="add-btn" onclick="openProductModal()">+ Add Medicine</button>
-            </div>
+        <div class="topbar">
+          <div>
+            <span class="eyebrow">USERS</span>
+            <h1>Customers</h1>
+          </div>
+        </div>
 
-            <div class="panel">
-                <div id="adminProducts" class="table-wrapper"></div>
-            </div>
+        <div class="panel">
 
-        </section>
+          <p>
+            Customer details are available through the orders.
+          </p>
 
+          <p style="margin-top:10px;color:var(--text-muted);font-size:13.5px;">
+            Names, phone numbers and addresses are visible on each order in the Orders tab.
+          </p>
 
-        <!-- ORDERS -->
-        <section id="ordersSection" class="hidden">
+        </div>
 
-            <div class="topbar">
-                <div>
-                    <span class="eyebrow">SALES</span>
-                    <h1>Orders</h1>
-                </div>
-                <button class="refresh-btn" onclick="loadOrders()">🔄 Refresh</button>
-            </div>
-
-            <div class="dashboard-grid">
-
-                <div class="panel" style="margin-bottom:0;">
-                    <div id="adminOrders" class="table-wrapper"></div>
-                </div>
-
-                <div class="status-panel">
-                    <h2>Update Order Status</h2>
-                    <p class="order-ref" id="ordersOrderRef">No order selected</p>
-                    <div id="ordersStatusActions">
-                        <div class="empty-state">Click any order row to update its status.</div>
-                    </div>
-                </div>
-
-            </div>
-
-        </section>
+      </section>
 
 
-        <!-- CUSTOMERS -->
-        <section id="customersSection" class="hidden">
+      <!-- REPORTS SECTION -->
+      <section id="reportsSection" class="hidden">
 
-            <div class="topbar">
-                <div>
-                    <span class="eyebrow">USERS</span>
-                    <h1>Customers</h1>
-                </div>
-            </div>
+        <div class="topbar">
 
-            <div class="panel">
-                <p style="margin-bottom:10px;">Customer authentication is managed by Appwrite Authentication.</p>
-                <p style="color:var(--text-muted);font-size:13.5px;">Customer names, phone numbers and delivery addresses are visible on each of their orders in the Orders tab.</p>
-            </div>
+          <div>
+            <span class="eyebrow">INSIGHTS</span>
+            <h1>Reports</h1>
+          </div>
 
-        </section>
+        </div>
 
 
-        <!-- REPORTS -->
-        <section id="reportsSection" class="hidden">
+        <div class="panel">
 
-            <div class="topbar">
-                <div>
-                    <span class="eyebrow">INSIGHTS</span>
-                    <h1>Reports</h1>
-                </div>
-            </div>
+          <p style="color:var(--text-muted);font-size:13.5px;">
+            Live order totals are available on the Dashboard.
+            Date-range exports and category breakdowns can be added here.
+          </p>
 
-            <div class="panel">
-                <p style="color:var(--text-muted);font-size:13.5px;">Order and sales totals are available live on the Dashboard tab. Deeper reporting (date-range exports, category breakdowns) can be added here once you tell us what you'd like to track.</p>
-            </div>
+        </div>
 
-        </section>
+      </section>
 
 
-        <!-- SETTINGS -->
-        <section id="settingsSection" class="hidden">
+      <!-- SETTINGS SECTION -->
+      <section id="settingsSection" class="hidden">
 
-            <div class="topbar">
-                <div>
-                    <span class="eyebrow">PREFERENCES</span>
-                    <h1>Settings</h1>
-                </div>
-            </div>
+        <div class="topbar">
 
-            <div class="panel">
-                <p style="color:var(--text-muted);font-size:13.5px;">Account and store settings live here. Signed in as <strong id="settingsAdminEmail" style="color:var(--text);"></strong>.</p>
-            </div>
+          <div>
+            <span class="eyebrow">PREFERENCES</span>
+            <h1>Settings</h1>
+          </div>
 
-        </section>
+        </div>
 
+
+        <div class="panel">
+
+          <p style="color:var(--text-muted);font-size:13.5px;">
+
+            Admin Panel Settings
+
+            <br><br>
+
+            Products and orders can be managed directly from this dashboard.
+
+          </p>
+
+        </div>
+
+      </section>
 
     </main>
 
-</div>
+  </div>
 
 
-<!-- ============ PRODUCT MODAL ============ -->
-<div id="productModal" class="product-modal">
+  <!-- ===== ADD PRODUCT MODAL ===== -->
+  <div id="productModal" class="product-modal">
 
     <div class="product-modal-content">
 
-        <button class="close" onclick="closeProductModal()">×</button>
+      <button class="close"
+        onclick="closeProductModal()">
+        ×
+      </button>
 
-        <h2>Add Medicine</h2>
+      <h2>Add Medicine</h2>
 
-        <label>Medicine Name</label>
-        <input id="productName" type="text" placeholder="Paracetamol 500mg">
 
-        <label>Category</label>
-        <select id="productCategory">
-            <option>Pain Relief</option>
-            <option>Vitamins</option>
-            <option>Diabetes</option>
-            <option>Skin Care</option>
-            <option>Personal Care</option>
-            <option>Baby Care</option>
-        </select>
+      <label>Medicine Name</label>
 
-        <label>Description</label>
-        <textarea id="productDescription" placeholder="Product description"></textarea>
+      <input
+        id="productName"
+        type="text"
+        placeholder="Paracetamol 500mg"
+      >
 
-        <label>Price</label>
-        <input id="productPrice" type="number" placeholder="100">
 
-        <label>Discount Price</label>
-        <input id="productDiscount" type="number" placeholder="80">
+      <label>Category</label>
 
-        <label>Stock</label>
-        <input id="productStock" type="number" placeholder="100">
+      <select id="productCategory">
 
-        <label>Image URL</label>
-        <input id="productImage" type="text" placeholder="https://...">
+        <option>Pain Relief</option>
+        <option>Vitamins</option>
+        <option>Diabetes</option>
+        <option>Skin Care</option>
+        <option>Personal Care</option>
+        <option>Baby Care</option>
 
-        <label class="checkbox">
-            <input id="prescriptionRequired" type="checkbox">
-            Prescription Required
-        </label>
+      </select>
 
-        <button class="save-btn" onclick="addProduct()">Add Product</button>
 
-        <p id="productMessage"></p>
+      <label>Description</label>
+
+      <textarea
+        id="productDescription"
+        placeholder="Product description">
+      </textarea>
+
+
+      <label>Price (₹)</label>
+
+      <input
+        id="productPrice"
+        type="number"
+        placeholder="100"
+      >
+
+
+      <label>Discount Price (₹)</label>
+
+      <input
+        id="productDiscount"
+        type="number"
+        placeholder="80 (optional)"
+      >
+
+
+      <label>Stock</label>
+
+      <input
+        id="productStock"
+        type="number"
+        placeholder="100"
+      >
+
+
+      <label>Image URL</label>
+
+      <input
+        id="productImage"
+        type="text"
+        placeholder="https://..."
+      >
+
+
+      <label class="checkbox">
+
+        <input
+          id="prescriptionRequired"
+          type="checkbox"
+        >
+
+        Prescription Required
+
+      </label>
+
+
+      <button class="save-btn"
+        onclick="addProduct()">
+        Add Product
+      </button>
+
+      <p id="productMessage"></p>
 
     </div>
 
-</div>
+  </div>
 
-<script src="https://cdn.jsdelivr.net/npm/appwrite@23.0.0"></script>
-<script src="appwrite.js"></script>
-<script src="admin.js"></script>
+
+  <!-- SCRIPTS -->
+  <script src="appwrite.js"></script>
+  <script src="admin.js"></script>
+
 </body>
 </html>
